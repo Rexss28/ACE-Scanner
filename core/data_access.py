@@ -113,6 +113,74 @@ class DataAccess:
         with self._connect() as conn:
             return conn.execute("SELECT COUNT(*) FROM Employees;").fetchone()[0]
 
+
+        # ------------------------------------------------------------------
+    # Employee scan status
+    # ------------------------------------------------------------------
+    def has_scanned(self, barcode: str, date: str | None = None) -> bool:
+        """Check if an employee has scanned.
+
+        Args:
+            barcode: The employee's barcode.
+            date: If provided (YYYY-MM-DD), checks that specific date.
+                  If None, checks if they've scanned on any date.
+
+        Returns:
+            True if a matching ScanLogs row exists, False otherwise.
+        """
+        if date is None:
+            query = "SELECT 1 FROM ScanLogs WHERE barcode = ? LIMIT 1;"
+            params = (barcode,)
+        else:
+            query = (
+                "SELECT 1 FROM ScanLogs WHERE barcode = ? AND full_date = ? LIMIT 1;"
+            )
+            params = (barcode, date)
+
+        with self._connect() as conn:
+            return conn.execute(query, params).fetchone() is not None
+
+    def get_all_employees_with_status(self, date: str | None = None) -> list[dict]:
+        """Return every employee + whether they've scanned.
+
+        Args:
+            date: If provided (YYYY-MM-DD), only considers scans on that date.
+                  If None, considers any scan ever.
+
+        Returns:
+            List of dicts: [{"barcode": ..., "full_name": ..., "has_scanned": bool}, ...]
+        """
+        with self._connect() as conn:
+            if date is None:
+                rows = conn.execute("""
+                    SELECT e.barcode, e.full_name,
+                           CASE WHEN s.id IS NULL THEN 0 ELSE 1 END AS has_scanned
+                    FROM Employees e
+                    LEFT JOIN ScanLogs s ON e.barcode = s.barcode
+                    GROUP BY e.barcode, e.full_name
+                    ORDER BY e.full_name;
+                """).fetchall()
+            else:
+                rows = conn.execute("""
+                    SELECT e.barcode, e.full_name,
+                           CASE WHEN s.id IS NULL THEN 0 ELSE 1 END AS has_scanned
+                    FROM Employees e
+                    LEFT JOIN ScanLogs s ON e.barcode = s.barcode AND s.full_date = ?
+                    GROUP BY e.barcode, e.full_name
+                    ORDER BY e.full_name;
+                """, (date,)).fetchall()
+
+        return [
+            {
+                "barcode": r["barcode"],
+                "full_name": r["full_name"],
+                "has_scanned": bool(r["has_scanned"]),
+            }
+            for r in rows
+        ]
+
+
+
     # ------------------------------------------------------------------
     # Scanning
     # ------------------------------------------------------------------

@@ -64,3 +64,54 @@ def test_unique_attendees_excludes_unknown():
     attendees = db.get_unique_attendees()
     assert len(attendees) == 1
     assert attendees[0].full_name == "Juan"
+
+def test_has_scanned_false_for_new_employee():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan Dela Cruz")
+    assert db.has_scanned("EMP0001") is False
+
+
+def test_has_scanned_true_after_scan():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan Dela Cruz")
+    db.log_scan("EMP0001")
+    assert db.has_scanned("EMP0001") is True
+
+
+def test_has_scanned_date_filter():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan Dela Cruz")
+    db.log_scan("EMP0001")
+    # Has scanned today
+    from datetime import datetime
+    today = datetime.now().strftime("%Y-%m-%d")
+    assert db.has_scanned("EMP0001", date=today) is True
+    # Has not scanned on a fake date
+    assert db.has_scanned("EMP0001", date="2099-01-01") is False
+
+
+def test_get_all_employees_with_status():
+    db = make_db()
+    db.add_employee("EMP0001", "Ana Garcia")
+    db.add_employee("EMP0002", "Juan Dela Cruz")
+    db.log_scan("EMP0002")  # only Juan scans
+
+    statuses = db.get_all_employees_with_status()
+    assert len(statuses) == 2
+
+    by_barcode = {s["barcode"]: s for s in statuses}
+    assert by_barcode["EMP0001"]["has_scanned"] is False
+    assert by_barcode["EMP0002"]["has_scanned"] is True
+
+
+def test_get_all_employees_with_status_date_filter():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan Dela Cruz")
+    db.log_scan("EMP0001")
+
+    today = __import__("datetime").datetime.now().strftime("%Y-%m-%d")
+    today_status = db.get_all_employees_with_status(date=today)
+    assert today_status[0]["has_scanned"] is True
+
+    future_status = db.get_all_employees_with_status(date="2099-01-01")
+    assert future_status[0]["has_scanned"] is False
