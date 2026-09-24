@@ -1,0 +1,29 @@
+Person 4
+DevOps/Intergrater - Jefferson
+
+Files/Folders:
+-main.py
+-requirements.py
+-README.md
+-test_raffle.py
+-scripts/export_report.py
+
+Responsibility: Making everything work together, then getting it to 1,000 employees' machines.
+
+Day-to-day tasks:
+
+Write main.py that wires DataAccess + ScannerListener + MainWindow together
+
+Manage requirements.txt — lock versions, resolve conflicts
+
+Maintain .gitignore and README.md
+
+Set up the packaging pipeline: Nuitka or PyInstaller to produce a standalone .exe
+
+Create the installer (Inno Setup, MSI, or MSIX)
+
+Set up Git hooks, PR templates, branch protection rules
+
+Plan the deployment: how does the .exe get onto 1,000 machines? USB? Network share? SCCM/Intune?
+
+Write the CSV export script for HR reporting

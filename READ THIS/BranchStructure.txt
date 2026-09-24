@@ -1,0 +1,11 @@
+main                              ← stable, always working
+│
+├── develop                       ← integration branch (optional but recommended)
+│   │
+│   ├── feature/data-layer        ← Rex
+│   ├── feature/scanner-input     ← Uiko
+│   ├── feature/main-ui           ← Marriane    
+│   ├── feature/admin-ui          ← Marriane  
+│   ├── feature/raffle-ui         ← Marriane  
+│   └── feature/packaging         ← Jeff
+                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           

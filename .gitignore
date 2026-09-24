@@ -1,0 +1,23 @@
+# Virtual environment
+.venv/
+venv/
+env/
+
+# Database files
+*.db
+*.db-wal
+*.db-shm
+
+# Python cache
+__pycache__/
+*.py[cod]
+*$py.class
+
+# IDE / OS junk
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Test artifacts
+test_attendance.db*
