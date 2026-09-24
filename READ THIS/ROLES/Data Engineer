@@ -1,0 +1,25 @@
+Person
+DATA ENGINEER - Rex
+
+Files/Folder:
+-core/data_access.py
+-core/importer.py
+-core/models.py
+-scripts/seed_employees.py
+-tests/test_data_access.py
+-tests/test_importer.py
+
+
+Responsibility: Everything about how data is stored, retrieved, and validated.
+
+Day-to-day tasks:
+
+Design and maintain the SQLite schema (Employees, ScanLogs)
+
+Write DataAccess methods: log_scan(), add_employee(), get_recent_scans(), get_employee_by_barcode()
+
+Handle edge cases: duplicate scans, unknown barcodes, WAL mode for crash safety
+
+Write the seed script that populates the 1,000 employees for testing
+
+Write unit tests for the data layer

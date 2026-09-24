@@ -1,0 +1,24 @@
+Person 3
+UI/UX Developer - Marianne
+
+Files/Folder:
+-UI/main_window.py
+-UI/admin_window.py
+-UI/raffle_window.py
+-UI/styles.py
+
+Responsibility: The window employees and admins actually see and interact with.
+
+Day-to-day tasks:
+
+Build the PySide6 main window: scan input, status display, recent scans list
+
+Design the visual feedback: green checkmark for known employees, red warning for unknown
+
+Implement the admin panel (add/edit employees, view scan history)
+
+Apply styles and branding (company colors, logo)
+
+Ensure the window auto-focuses the input field on startup and after every scan
+
+Handle window close, minimize, and multi-monitor setups
