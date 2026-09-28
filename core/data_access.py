@@ -83,6 +83,9 @@ class DataAccess:
     # ------------------------------------------------------------------
     def add_employee(self, barcode: str, full_name: str) -> Employee:
         """Insert a new employee. Raises if barcode already exists."""
+        barcode = barcode.strip().upper()
+        full_name = full_name.strip()
+
         now = datetime.now().isoformat(timespec="seconds")
         with self._connect() as conn:
             conn.execute(
@@ -93,6 +96,7 @@ class DataAccess:
         return Employee(barcode=barcode, full_name=full_name)
 
     def get_employee_by_barcode(self, barcode: str) -> Employee | None:
+        barcode = barcode.strip().upper()
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT barcode, full_name FROM Employees WHERE barcode = ? LIMIT 1;",
@@ -113,8 +117,7 @@ class DataAccess:
         with self._connect() as conn:
             return conn.execute("SELECT COUNT(*) FROM Employees;").fetchone()[0]
 
-
-        # ------------------------------------------------------------------
+    # ------------------------------------------------------------------
     # Employee scan status
     # ------------------------------------------------------------------
     def has_scanned(self, barcode: str, date: str | None = None) -> bool:
@@ -128,6 +131,8 @@ class DataAccess:
         Returns:
             True if a matching ScanLogs row exists, False otherwise.
         """
+        barcode = barcode.strip().upper()
+
         if date is None:
             query = "SELECT 1 FROM ScanLogs WHERE barcode = ? LIMIT 1;"
             params = (barcode,)
@@ -179,13 +184,13 @@ class DataAccess:
             for r in rows
         ]
 
-
-
     # ------------------------------------------------------------------
     # Scanning
     # ------------------------------------------------------------------
     def log_scan(self, barcode: str) -> ScanResult:
         """Record a scan. Deduplicated per barcode per day."""
+        barcode = barcode.strip().upper()
+
         now = datetime.now()
         time_in = now.strftime("%H:%M:%S")
         full_date = now.strftime("%Y-%m-%d")
@@ -219,6 +224,7 @@ class DataAccess:
         )
 
     def _already_scanned_today(self, barcode: str, full_date: str) -> bool:
+        barcode = barcode.strip().upper()
         with self._connect() as conn:
             row = conn.execute(
                 "SELECT 1 FROM ScanLogs WHERE barcode = ? AND full_date = ? LIMIT 1;",
@@ -267,6 +273,7 @@ class DataAccess:
     # Raffle
     # ------------------------------------------------------------------
     def log_winner(self, barcode: str, full_name: str, prize: str) -> RaffleWinner:
+        barcode = barcode.strip().upper()
         now = datetime.now().isoformat(timespec="seconds")
         with self._connect() as conn:
             conn.execute(
