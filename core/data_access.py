@@ -188,7 +188,7 @@ class DataAccess:
     # Scanning
     # ------------------------------------------------------------------
     def log_scan(self, barcode: str) -> ScanResult:
-        """Record a scan. Deduplicated per barcode per day."""
+        """Record a scan. Unknown barcodes are NOT logged."""
         barcode = barcode.strip().upper()
 
         now = datetime.now()
@@ -197,29 +197,33 @@ class DataAccess:
 
         employee = self.get_employee_by_barcode(barcode)
 
+        # Unknown barcode — return early without logging
         if employee is None:
-            full_name = "UNKNOWN"
-            known = False
-        else:
-            full_name = employee.full_name
-            known = True
+            return ScanResult(
+                barcode=barcode,
+                full_name="UNKNOWN",
+                time_in=time_in,
+                full_date=full_date,
+                known=False,
+                already_scanned=False,
+            )
 
+        # Known employee — check dedup, then log
         already_scanned = self._already_scanned_today(barcode, full_date)
-
         if not already_scanned:
             with self._connect() as conn:
                 conn.execute(
                     "INSERT INTO ScanLogs (barcode, full_name, time_in, full_date) "
                     "VALUES (?, ?, ?, ?);",
-                    (barcode, full_name, time_in, full_date),
+                    (barcode, employee.full_name, time_in, full_date),
                 )
 
         return ScanResult(
             barcode=barcode,
-            full_name=full_name,
+            full_name=employee.full_name,
             time_in=time_in,
             full_date=full_date,
-            known=known,
+            known=True,
             already_scanned=already_scanned,
         )
 
@@ -231,6 +235,26 @@ class DataAccess:
                 (barcode, full_date),
             ).fetchone()
         return row is not None
+
+    def _log_scan_with_timestamp(
+        self,
+        barcode: str,
+        full_name: str,
+        time_in: str,
+        full_date: str,
+    ) -> None:
+        """Insert a scan with a specific timestamp (used during merges).
+
+        Does NOT check for duplicates — the caller handles that.
+        Uses INSERT OR IGNORE as a final safety net.
+        """
+        barcode = barcode.strip().upper()
+        with self._connect() as conn:
+            conn.execute(
+                "INSERT OR IGNORE INTO ScanLogs (barcode, full_name, time_in, full_date) "
+                "VALUES (?, ?, ?, ?);",
+                (barcode, full_name, time_in, full_date),
+            )
 
     # ------------------------------------------------------------------
     # Reporting

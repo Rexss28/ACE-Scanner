@@ -1,5 +1,8 @@
 Commands
 
+Run main window
+- python main.py
+
 Scanner Test
  - python -m scripts.test_scanner (barcode)
 - python -m scripts.test_webcam (webcam)
@@ -15,3 +18,6 @@ Get Employees from Excel
 
 Test Functions if working
 - pytest tests/test_data_access.py -v
+
+Test merge if working
+- pytest tests/test_merge.py -v
