@@ -115,3 +115,78 @@ def test_get_all_employees_with_status_date_filter():
 
     future_status = db.get_all_employees_with_status(date="2099-01-01")
     assert future_status[0]["has_scanned"] is False
+
+def test_pick_random_winner_returns_attendee():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan")
+    db.log_scan("EMP0001")
+    winner = db.pick_random_winner()
+    assert winner is not None
+    assert winner.barcode == "EMP0001"
+
+
+def test_pick_random_winner_excludes_previous():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan")
+    db.add_employee("EMP0002", "Maria")
+    db.log_scan("EMP0001")
+    db.log_scan("EMP0002")
+    db.log_winner("EMP0001", "Juan", "TV")
+
+    winner = db.pick_random_winner(exclude_previous_winners=True)
+    assert winner.barcode == "EMP0002"
+
+
+def test_pick_random_winner_returns_none_if_all_won():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan")
+    db.log_scan("EMP0001")
+    db.log_winner("EMP0001", "Juan", "TV")
+
+    winner = db.pick_random_winner(exclude_previous_winners=True)
+    assert winner is None
+
+
+def test_pick_random_winner_allows_previous_if_disabled():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan")
+    db.log_scan("EMP0001")
+    db.log_winner("EMP0001", "Juan", "TV")
+
+    winner = db.pick_random_winner(exclude_previous_winners=False)
+    assert winner is not None
+    assert winner.barcode == "EMP0001"
+
+
+def test_has_won():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan")
+    db.log_scan("EMP0001")
+    assert db.has_won("EMP0001") is False
+    db.log_winner("EMP0001", "Juan", "TV")
+    assert db.has_won("EMP0001") is True
+
+
+def test_reset_winners():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan")
+    db.log_scan("EMP0001")
+    db.log_winner("EMP0001", "Juan", "TV")
+    assert len(db.get_winners()) == 1
+    db.reset_winners()
+    assert len(db.get_winners()) == 0
+
+
+def test_get_attendees_with_winner_status():
+    db = make_db()
+    db.add_employee("EMP0001", "Juan")
+    db.add_employee("EMP0002", "Maria")
+    db.log_scan("EMP0001")
+    db.log_scan("EMP0002")
+    db.log_winner("EMP0001", "Juan", "TV")
+
+    statuses = db.get_attendees_with_winner_status()
+    by_barcode = {s["barcode"]: s for s in statuses}
+
+    assert by_barcode["EMP0001"]["has_won"] is True
+    assert by_barcode["EMP0002"]["has_won"] is False

@@ -4,6 +4,7 @@ This is the ONLY file in the app that talks to SQLite.
 All other layers must go through the DataAccess class.
 """
 
+import random
 import sqlite3
 from datetime import datetime
 from pathlib import Path
@@ -321,4 +322,66 @@ class DataAccess:
                 drawn_at=r["drawn_at"],
             )
             for r in rows
+        ]
+
+    def pick_random_winner(
+        self, exclude_previous_winners: bool = True
+    ) -> Employee | None:
+        """Pick a random attendee who hasn't already won (optional).
+
+        Args:
+            exclude_previous_winners: If True, skip anyone already in
+                RaffleWinners. If False, allow repeats.
+
+        Returns:
+            A random Employee, or None if no eligible attendees exist.
+        """
+        attendees = self.get_unique_attendees()
+        if not attendees:
+            return None
+
+        if exclude_previous_winners:
+            winner_barcodes = {w.barcode for w in self.get_winners()}
+            attendees = [a for a in attendees if a.barcode not in winner_barcodes]
+            if not attendees:
+                return None
+
+        return random.choice(attendees)
+
+    def has_won(self, barcode: str) -> bool:
+        """Has this person already won a prize?"""
+        barcode = barcode.strip().upper()
+        with self._connect() as conn:
+            row = conn.execute(
+                "SELECT 1 FROM RaffleWinners WHERE barcode = ? LIMIT 1;",
+                (barcode,),
+            ).fetchone()
+        return row is not None
+
+    def reset_winners(self) -> None:
+        """Clear all raffle winners (for re-drawing)."""
+        with self._connect() as conn:
+            conn.execute("DELETE FROM RaffleWinners;")
+            conn.execute(
+                "DELETE FROM sqlite_sequence WHERE name = 'RaffleWinners';"
+            )
+
+    def get_attendees_with_winner_status(self) -> list[dict]:
+        """Return all attendees + whether they've already won.
+
+        Used by the raffle UI to cross out previous winners.
+
+        Returns:
+            List of dicts: [{"barcode": ..., "full_name": ..., "has_won": bool}, ...]
+        """
+        attendees = self.get_unique_attendees()
+        winner_barcodes = {w.barcode for w in self.get_winners()}
+
+        return [
+            {
+                "barcode": a.barcode,
+                "full_name": a.full_name,
+                "has_won": a.barcode in winner_barcodes,
+            }
+            for a in attendees
         ]
