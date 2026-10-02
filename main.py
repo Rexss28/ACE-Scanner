@@ -1,7 +1,10 @@
 import sys
 import os
 from PySide6.QtWidgets import QApplication
-from PySide6.QtGui import QIcon
+from PySide6.QtGui import (
+    QIcon,
+    QFont,
+)
 from PySide6.QtCore import Qt
 
 from core.data_access import DataAccess
@@ -16,6 +19,9 @@ def main():
 
     if os.path.exists("ui/assets/icons/ACE-LOGO.png"):
         app.setWindowIcon(QIcon("ui/assets/icons/ACE-LOGO.png"))
+
+    global_font = QFont("Poppins", 12, QFont.Weight.Bold)
+    QApplication.setFont(global_font)
 
     db = DataAccess()
     window = MainWindow(db)
